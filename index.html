@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summer 2025 Academic Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upcoming-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upcoming-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .urgent { 
+            background: #ffe6e6; 
+            border-left-color: #ff4757;
+        }
+
+        .soon { 
+            background: #fff3e0; 
+            border-left-color: #ffa726;
+        }
+
+        .upcoming { 
+            background: #e8f5e8; 
+            border-left-color: #4caf50;
+        }
+
+        .course-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .course-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .course-content.active {
+            display: block;
+        }
+
+        .assignment {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .assignment:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .assignment.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background-color: #f8f9fa;
+        }
+
+        .date-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4caf50;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+
+        .save-indicator.syncing {
+            background: #ffa726;
+        }
+
+        .save-indicator.error {
+            background: #ff4757;
+        }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            color: #666;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .course-tabs {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="save-indicator" id="saveIndicator">✓ Synced to GitHub</div>
+    <div class="sync-status" id="syncStatus">🔄 Syncing...</div>
+    
+    <div class="container">
+        <h1>📚 Summer 2025 Academic Dashboard</h1>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>🔥 Next 7 Days</h2>
+                <div id="upcoming-assignments">
+                    <!-- Upcoming assignments will be populated here -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📊 Quick Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-assignments">0</div>
+                        <div>Total Assignments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completed-assignments">0</div>
+                        <div>Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="upcoming-count">0</div>
+                        <div>Due This Week</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <div style="color: #666; margin-bottom: 5px;">Overall Progress</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="overall-progress" style="width: 0%"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 5px; color: #666;" id="progress-text">0% Complete</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="course-tabs">
+            <button class="tab active" onclick="showCourse('dance')">🎭 DANC 1305</button>
+            <button class="tab" onclick="showCourse('quant')">📊 OPRE 3333</button>
+            <button class="tab" onclick="showCourse('supply')">🚛 OPRE 3310</button>
+            <button class="tab" onclick="showCourse('capstone')">🎯 Capstone</button>
+        </div>
+
+        <div id="dance" class="course-content active">
+            <h2>🎭 Introduction to World Dance Forms (DANC 1305)</h2>
+            <div id="dance-assignments"></div>
+        </div>
+
+        <div id="quant" class="course-content">
+            <h2>📊 Quantitative Business Analysis (OPRE 3333)</h2>
+            <div id="quant-assignments"></div>
+        </div>
+
+        <div id="supply" class="course-content">
+            <h2>🚛 Supply Chain and Operations Management (OPRE 3310)</h2>
+            <div id="supply-assignments"></div>
+        </div>
+
+        <div id="capstone" class="course-content">
+            <h2>🎯 Capstone Senior Project</h2>
+            <div id="capstone-assignments"></div>
+        </div>
+    </div>
+
+    <script>
+        // Assignment data extracted from syllabi
+        const assignments = {
+            dance: [
+                {name: "Assignment 1 - Reading Assignment", date: "2025-06-04", type: "Assignment", weight: "40%"},
+                {name: "Assignment 2", date: "2025-06-06", type: "Assignment", weight: "40%"},
+                {name: "Exam 1", date: "2025-06-09", type: "Exam", weight: "40%"},
+                {name: "Assignment 3 - India", date: "2025-06-10", type: "Assignment", weight: "40%"},
+                {name: "Assignment 4 - Bali/Java", date: "2025-06-12", type: "Assignment", weight: "40%"},
+                {name: "India and Bali/Java Exam", date: "2025-06-16", type: "Exam", weight: "40%"},
+                {name: "Assignment 5 - Cambodia/China", date: "2025-06-17", type: "Assignment", weight: "40%"},
+                {name: "Assignment 6 - Japan", date: "2025-06-19", type: "Assignment", weight: "40%"},
+                {name: "Cambodia/China and Japan Exam", date: "2025-06-23", type: "Exam", weight: "40%"},
+                {name: "Assignment 7 - Hawai'i/New Zealand/Papua New Guinea", date: "2025-06-24", type: "Assignment", weight: "40%"},
+                {name: "Hawai'i, New Zealand, Papua New Guinea Exam", date: "2025-06-27", type: "Exam", weight: "40%"},
+                {name: "Cultural Dance Assignment", date: "2025-06-27", type: "Assignment", weight: "40%"},
+                {name: "Final Project", date: "2025-07-01", type: "Final Project", weight: "20%"},
+                {name: "Final Project Presentation Assignment", date: "2025-07-03", type: "Presentation", weight: "20%"}
+            ],
+            quant: [
+                {name: "Assignment 1 - Systems of Linear Equations", date: "2025-06-09", type: "Assignment", weight: "25%"},
+                {name: "Assignment 2 - Matrices", date: "2025-06-16", type: "Assignment", weight: "25%"},
+                {name: "Assignment 3 - Determinant", date: "2025-06-24", type: "Assignment", weight: "25%"},
+                {name: "Exam 1 (Units 1-3)", date: "2025-06-25", type: "Exam", weight: "Varies"},
+                {name: "Assignment 4 - Business Analytics", date: "2025-07-16", type: "Assignment", weight: "25%"},
+                {name: "Exam 2 (Units 4-6)", date: "2025-07-16", type: "Exam", weight: "Varies"},
+                {name: "Assignment 5 - Linear Optimization", date: "2025-07-28", type: "Assignment", weight: "25%"},
+                {name: "Assignment 6 - Integer Linear Optimization", date: "2025-08-08", type: "Assignment", weight: "25%"},
+                {name: "Exam 3 (Units 7-10)", date: "2025-08-11", type: "Exam", weight: "Varies"}
+            ],
+            supply: [
+                {name: "Exam 1", date: "2025-07-09", type: "Exam", weight: "60%"},
+                {name: "Exam 2", date: "2025-08-13", type: "Exam", weight: "60%"}
+            ],
+            capstone: [
+                {name: "Team Charter", date: "2025-06-13", type: "Charter", weight: "10pts"},
+                {name: "Learning Modules (Time & Project Management)", date: "2025-06-13", type: "Module", weight: "5pts"},
+                {name: "Kickoff Meetings", date: "2025-06-13", type: "Meeting", weight: "Attendance"},
+                {name: "Learning Modules (Global Mindset & Innovation)", date: "2025-06-20", type: "Module", weight: "5pts"},
+                {name: "Project Charter", date: "2025-06-20", type: "Charter", weight: "10pts"},
+                {name: "Project Plan", date: "2025-06-27", type: "Plan", weight: "10pts"},
+                {name: "Midterm Report", date: "2025-07-04", type: "Report", weight: "35pts"},
+                {name: "Midterm 360 Peer Evaluation", date: "2025-07-04", type: "Evaluation", weight: "5pts"},
+                {name: "Dry Run Presentations", date: "2025-08-01", type: "Presentation", weight: "15pts"},
+                {name: "Final Presentation", date: "2025-08-13", type: "Presentation", weight: "15pts"},
+                {name: "Final Report", date: "2025-08-13", type: "Report", weight: "35pts"},
+                {name: "End-term 360 Peer Evaluation", date: "2025-08-13", type: "Evaluation", weight: "5pts"},
+                {name: "Student Skill Assessment", date: "2025-08-13", type: "Assessment", weight: "Points"},
+                {name: "Infographic", date: "2025-08-13", type: "Infographic", weight: "10pts"}
+            ]
+        };
+
+        // GitHub storage configuration
+        const GITHUB_CONFIG = {
+            token: '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',
+            owner: 'UziAkh',
+            repo: 'summer2025',
+            fileName: 'dashboard-data.json',
+            baseUrl: 'https://api.github.com/repos'
+        };
+
+        // GitHub-powered Dashboard class
+        class GitHubDashboard {
+            constructor() {
+                this.completedAssignments = new Set();
+                this.isLoading = true;
+                this.fileSha = null; // GitHub requires this for updates
+                this.init();
+            }
+
+            async init() {
+                this.showSyncStatus('Loading your data...');
+                await this.loadFromGitHub();
+                this.updateDisplay();
+                this.showSyncStatus('✅ Synced with GitHub');
+                this.isLoading = false;
+            }
+
+            async loadFromGitHub() {
+                try {
+                    const response = await fetch(
+                        `${GITHUB_CONFIG.baseUrl}/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        }
+                    );
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.fileSha = data.sha;
+                        
+                        // Decode the base64 content
+                        const content = JSON.parse(atob(data.content));
+                        if (content.completedAssignments) {
+                            this.completedAssignments = new Set(content.completedAssignments);
+                        }
+                    } else if (response.status === 404) {
+                        // File doesn't exist yet, create it
+                        await this.createFileOnGitHub();
+                    }
+                } catch (error) {
+                    console.log('Loading from local backup...', error);
+                    this.loadFromLocalBackup();
+                }
+            }
+
+            async createFileOnGitHub() {
+                try {
+                    const content = {
+                        completedAssignments: [...this.completedAssignments],
+                        lastUpdated: new Date().toISOString()
+                    };
+
+                    const response = await fetch(
+                        `${GITHUB_CONFIG.baseUrl}/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message: 'Create dashboard data file',
+                                content: btoa(JSON.stringify(content, null, 2))
+                            })
+                        }
+                    );
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.fileSha = data.content.sha;
+                        console.log('Created dashboard data file on GitHub');
+                    }
+                } catch (error) {
+                    console.log('Could not create file on GitHub:', error);
+                }
+            }
+
+            loadFromLocalBackup() {
+                try {
+                    const saved = localStorage.getItem('academicDashboard_completed');
+                    if (saved) {
+                        this.completedAssignments = new Set(JSON.parse(saved));
+                    }
+                } catch (e) {
+                    console.log('No local backup available');
+                }
+            }
+
+            async saveToGitHub() {
+                if (this.isLoading) return;
+
+                this.showSyncStatus('🔄 Syncing to GitHub...');
+                this.showSaveIndicator('syncing');
+
+                try {
+                    const content = {
+                        completedAssignments: [...this.completedAssignments],
+                        lastUpdated: new Date().toISOString()
+                    };
+
+                    const response = await fetch(
+                        `${GITHUB_CONFIG.baseUrl}/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.fileName}`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message: `Update dashboard data - ${new Date().toLocaleString()}`,
+                                content: btoa(JSON.stringify(content, null, 2)),
+                                sha: this.fileSha
+                            })
+                        }
+                    );
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.fileSha = data.content.sha;
+                        this.showSaveIndicator('success');
+                        this.showSyncStatus('✅ Synced with GitHub');
+                        
+                        // Also save local backup
+                        localStorage.setItem('academicDashboard_completed', 
+                            JSON.stringify([...this.completedAssignments]));
+                    } else {
+                        throw new Error(`GitHub sync failed: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.log('GitHub sync error:', error);
+                    this.showSaveIndicator('error');
+                    this.showSyncStatus('📱 Saved locally');
+                    
+                    // Save locally as backup
+                    localStorage.setItem('academicDashboard_completed', 
+                        JSON.stringify([...this.completedAssignments]));
+                }
+            }
+
+            showSaveIndicator(type = 'success') {
+                const indicator = document.getElementById('saveIndicator');
+                indicator.className = 'save-indicator show';
+                
+                if (type === 'syncing') {
+                    indicator.textContent = '🔄 Syncing to GitHub...';
+                    indicator.classList.add('syncing');
+                } else if (type === 'success') {
+                    indicator.textContent = '✓ Synced to GitHub';
+                    indicator.classList.remove('syncing', 'error');
+                } else if (type === 'error') {
+                    indicator.textContent = '📱 Saved locally';
+                    indicator.classList.remove('syncing');
+                    indicator.classList.add('error');
+                }
+
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 3000);
+            }
+
+            showSyncStatus(message) {
+                const status = document.getElementById('syncStatus');
+                status.textContent = message;
+                status.style.display = 'block';
+                
+                if (message.includes('✅')) {
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                    }, 3000);
+                }
+            }
+
+            async toggleAssignment(assignmentId) {
+                if (this.completedAssignments.has(assignmentId)) {
+                    this.completedAssignments.delete(assignmentId);
+                } else {
+                    this.completedAssignments.add(assignmentId);
+                }
+                
+                this.updateDisplay();
+                await this.saveToGitHub();
+            }
+
+            getDaysUntil(dateString) {
+                const today = new Date();
+                const targetDate = new Date(dateString);
+                const diffTime = targetDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            }
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric'
+                });
+            }
+
+            updateDisplay() {
+                this.updateUpcoming();
+                this.updateCourseAssignments();
+                this.updateStats();
+            }
+
+            updateUpcoming() {
+                const upcomingContainer = document.getElementById('upcoming-assignments');
+                const allAssignments = [];
+                
+                // Flatten all assignments
+                Object.keys(assignments).forEach(course => {
+                    assignments[course].forEach((assignment, index) => {
+                        const assignmentId = `${course}-${index}`;
+                        if (!this.completedAssignments.has(assignmentId)) {
+                            allAssignments.push({
+                                ...assignment,
+                                course,
+                                id: assignmentId,
+                                daysUntil: this.getDaysUntil(assignment.date)
+                            });
+                        }
+                    });
+                });
+                
+                // Sort by date and take next 7 days
+                const upcoming = allAssignments
+                    .filter(a => a.daysUntil >= 0 && a.daysUntil <= 7)
+                    .sort((a, b) => a.daysUntil - b.daysUntil);
+                
+                upcomingContainer.innerHTML = '';
+                
+                if (upcoming.length === 0) {
+                    upcomingContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">🎉 Nothing due in the next 7 days!</div>';
+                    return;
+                }
+                
+                upcoming.forEach(assignment => {
+                    const urgencyClass = assignment.daysUntil <= 1 ? 'urgent' : 
+                                       assignment.daysUntil <= 3 ? 'soon' : 'upcoming';
+                    
+                    const daysText = assignment.daysUntil === 0 ? 'Today!' : 
+                                    assignment.daysUntil === 1 ? 'Tomorrow' : 
+                                    `${assignment.daysUntil} days`;
+                    
+                    upcomingContainer.innerHTML += `
+                        <div class="upcoming-item ${urgencyClass}" onclick="dashboard.toggleAssignment('${assignment.id}')">
+                            <div>
+                                <strong>${assignment.name}</strong><br>
+                                <small>${assignment.course.toUpperCase()}</small>
+                            </div>
+                            <div style="text-align: right;">
+                                <div>${daysText}</div>
+                                <small>${this.formatDate(assignment.date)}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            updateCourseAssignments() {
+                Object.keys(assignments).forEach(course => {
+                    const container = document.getElementById(`${course}-assignments`);
+                    container.innerHTML = '';
+                    
+                    assignments[course].forEach((assignment, index) => {
+                        const assignmentId = `${course}-${index}`;
+                        const isCompleted = this.completedAssignments.has(assignmentId);
+                        const daysUntil = this.getDaysUntil(assignment.date);
+                        
+                        container.innerHTML += `
+                            <div class="assignment ${isCompleted ? 'completed' : ''}">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="checkbox" class="checkbox" 
+                                           ${isCompleted ? 'checked' : ''} 
+                                           onchange="dashboard.toggleAssignment('${assignmentId}')">
+                                    <div>
+                                        <strong>${assignment.name}</strong><br>
+                                        <small>${assignment.type} • Weight: ${assignment.weight}</small>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="date-badge">${this.formatDate(assignment.date)}</div>
+                                    <small style="color: #666;">${daysUntil >= 0 ? `${daysUntil} days left` : `${Math.abs(daysUntil)} days ago`}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+            }
+
+            updateStats() {
+                const totalAssignments = Object.values(assignments).flat().length;
+                const completed = this.completedAssignments.size;
+                const upcomingThisWeek = Object.values(assignments).flat()
+                    .filter(a => {
+                        const days = this.getDaysUntil(a.date);
+                        return days >= 0 && days <= 7;
+                    }).length;
+                
+                const progressPercent = Math.round((completed / totalAssignments) * 100);
+                
+                document.getElementById('total-assignments').textContent = totalAssignments;
+                document.getElementById('completed-assignments').textContent = completed;
+                document.getElementById('upcoming-count').textContent = upcomingThisWeek;
+                document.getElementById('overall-progress').style.width = `${progressPercent}%`;
+                document.getElementById('progress-text').textContent = `${progressPercent}% Complete`;
+            }
+        }
+
+        // Global functions for tabs
+        function showCourse(courseId) {
+            // Hide all course contents
+            document.querySelectorAll('.course-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected course content
+            document.getElementById(courseId).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Initialize the GitHub dashboard when page loads
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', function() {
+            dashboard = new GitHubDashboard();
+        });
+    </script>
+</body>
+</html>
